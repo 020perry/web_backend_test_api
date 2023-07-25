@@ -1,3 +1,5 @@
+Here is your updated README file:
+
 # README DTT BACK END ASSESSMENT #
 
 ## Local development environment setup
@@ -10,9 +12,9 @@
 4. Run the terminal command `composer install` in your project folder.
 
 ## Project setup
-1. Create a database in [phpmyadmin](http://localhost/phpmyadmin) or use [MySQL Workbench](https://www.mysql.com/products/workbench/).
+1. Run the database migration script: Navigate to the `migration_scripts.php` file in your browser (e.g., `http://localhost/web_backend_test_catering_api/migration_scripts.php`). This script creates the necessary database and tables. 
 2. Fill in the config file `/config/config.php`:
-    1. Set the database name.
+    1. Set the database name (this should match the name used in the migration script).
     2. Set the username.
     3. Set the password.
 3. Set your project's base path in `/routes/router.php` as follows:
@@ -40,3 +42,4 @@ The database is registered in the DI container. Among other database features, q
 
 This will invoke the executeQuery method of the `App\Plugins\Db\Db` class.
 
+In the updated README, I added step 1 under "Project setup" to run the migration script. Please replace `migration_scripts.php` with the actual name of your migration script if it's different.
