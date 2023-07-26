@@ -220,6 +220,11 @@ class FacilityController extends BaseController {
             return (new Status\NotFound(['message' => 'Facility not found']))->send();
         }
 
+        // Get the tags associated with the facility
+        $query = 'SELECT tag_id FROM Facility_Tag WHERE facility_id = :id';
+        $this->db->executeQuery($query, [':id' => $id]);
+        $tags = $this->db->getStatement()->fetchAll(PDO::FETCH_COLUMN, 0);
+
         // Delete the tags from the Facility_Tag table
         $query = 'DELETE FROM Facility_Tag WHERE facility_id = :id';
         $this->db->executeQuery($query, [':id' => $id]);
@@ -227,6 +232,19 @@ class FacilityController extends BaseController {
         // Delete the facility from the database
         $query = 'DELETE FROM Facility WHERE id = :id';
         $this->db->executeQuery($query, [':id' => $id]);
+
+        // Check each tag to see if it's being used by any other facilities
+        foreach ($tags as $tag_id) {
+            $query = 'SELECT COUNT(*) FROM Facility_Tag WHERE tag_id = :tag_id';
+            $this->db->executeQuery($query, [':tag_id' => $tag_id]);
+            $count = $this->db->getStatement()->fetchColumn();
+
+            // If the tag is not used by any other facilities, delete it
+            if ($count == 0) {
+                $query = 'DELETE FROM Tag WHERE id = :tag_id';
+                $this->db->executeQuery($query, [':tag_id' => $tag_id]);
+            }
+        }
 
         // Send a response
         return (new Status\Ok(['message' => 'Facility deleted successfully']))->send();
