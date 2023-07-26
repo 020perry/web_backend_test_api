@@ -11,7 +11,7 @@
 
 ## Project setup
 1. Create a database in [phpmyadmin](http://localhost/phpmyadmin) or use [MySQL Workbench](https://www.mysql.com/products/workbench/).
-2. Import the SQL dump file dumpfile.sql that is located in config directory into your newly created database. This will create the necessary tables and fill them 
+2. Import the SQL dump file `/config/dumpfile.sql` into your newly created database. This will create the necessary tables and fill them 
 with some initial data.
 32. Fill in the config file `/config/config.php`:
     1. Set the database name.
