@@ -17,11 +17,10 @@
     2. Set the username.
     3. Set the password.
 4. Use phpMyAdmin:
-Select your database from the list on the left.
-   1.Click on the 'Import' tab at the top.
-   2.Click on the 'Choose File' button and select your dump file.
-   3.Click on the 'Go' button at the bottom to start the import process.
-
+    1. Click on the 'Import' tab at the top.
+    2. Click on the 'Choose File' button and select your dump file.
+    3. Click on the 'Go' button at the bottom to start the import process.
+       
 This will create the necessary tables and fill them 
 with some initial data.
 5. Set your project's base path in `/routes/router.php` as follows:
