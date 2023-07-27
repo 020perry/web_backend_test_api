@@ -12,17 +12,16 @@
 ## Project setup
 1. Create a database named catering in [phpmyadmin](http://localhost/phpmyadmin).
 2. Import the SQL dump file 'dtt_nk_2023/dumpfile_catering.sql' into your newly created database.
-3. Fill in the config file `/config/config.php`:
-    1. Set the database name.
-    2. Set the username.
-    3. Set the password.
-4. Use phpMyAdmin:
+   Use phpMyAdmin:
     1. Click on the 'Import' tab at the top.
-    2. Click on the 'Choose File' button and select your dump file.
+    2. Click on the 'Choose File' button and select your dump file, dumpfile_catering.sql.
     3. Click on the 'Go' button at the bottom to start the import process.
-       
 This will create the necessary tables and fill them 
 with some initial data.
+4. Fill in the config file `/config/config.php`:
+    1. Set the database name.
+    2. Set the username.
+    3. Set the password.      
 5. Set your project's base path in `/routes/router.php` as follows:
 
 ```
