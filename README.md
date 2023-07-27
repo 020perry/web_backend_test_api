@@ -11,7 +11,7 @@
 
 ## Project setup
 1. Create a database named catering in [phpmyadmin](http://localhost/phpmyadmin).
-2. Import the SQL dump file 'dtt_nk_2023/dumpfile_catering.sql' into your newly created database.
+2. Import the SQL dump file 'DTT assessment  - Backend_2023_NK/dumpfile_catering.sql' into your newly created database.
    Use phpMyAdmin:
     1. Click on the 'Import' tab at the top.
     2. Click on the 'Choose File' button and select your dump file, dumpfile_catering.sql.
