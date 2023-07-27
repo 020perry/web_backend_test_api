@@ -10,14 +10,19 @@
 4. Run the terminal command `composer install` in your project folder.
 
 ## Project setup
-1. Create a database in [phpmyadmin](http://localhost/phpmyadmin) or use [MySQL Workbench](https://www.mysql.com/products/workbench/).
-2. Import the SQL dump file `/config/dumpfile.sql` into your newly created database. This will create the necessary tables and fill them 
+1. Create a database named catering in [phpmyadmin](http://localhost/phpmyadmin).
+2. Import the SQL dump file 'DTT assessment  - Backend_2023_NK/dumpfile_catering.sql' into your newly created database.
+   Use phpMyAdmin:
+    1. Click on the 'Import' tab at the top.
+    2. Click on the 'Choose File' button and select your dump file, dumpfile_catering.sql.
+    3. Click on the 'Go' button at the bottom to start the import process.
+This will create the necessary tables and fill them 
 with some initial data.
-32. Fill in the config file `/config/config.php`:
+4. Fill in the config file `/config/config.php`:
     1. Set the database name.
     2. Set the username.
-    3. Set the password.
-43. Set your project's base path in `/routes/router.php` as follows:
+    3. Set the password.      
+5. Set your project's base path in `/routes/router.php` as follows:
 
 ```
 $router->setBasePath('/web_backend_test_catering_api');

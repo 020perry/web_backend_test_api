@@ -24,11 +24,14 @@ class FacilityController extends BaseController {
         } elseif (strpos($content_type, 'multipart/form-data') !== false) {
             // Handle form-data
             $data = $_POST;
-            // If you need to handle file uploads, you will also need to check the $_FILES superglobal
         }
 
-        // Validate input data
-        if (!isset($data['name'], $data['location'], $data['tags'])) {
+        // Basic validate input data
+        if (!isset($data['name'], $data['location'], $data['tags']) ||
+            !is_string($data['name']) ||
+            !is_array($data['location']) ||
+            array_diff_key($data['location'], array_flip(['city', 'address', 'zip_code', 'country_code', 'phone_number'])) ||
+            !is_array($data['tags'])) {
             // Send a response
             return (new Status\BadRequest(['message' => 'Invalid input data']))->send();
         }
@@ -36,6 +39,16 @@ class FacilityController extends BaseController {
         $name = $data['name'];
         $location_data = $data['location'];
         $tags = $data['tags'];
+
+        // Check if a facility with the same name already exists
+        $query = 'SELECT id FROM Facility WHERE name = :name';
+        $this->db->executeQuery($query, [':name' => $name]);
+        $existingFacility = $this->db->getStatement()->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingFacility) {
+            // If a facility with the same name exists, return an error
+            return (new Status\BadRequest(['message' => 'A facility with this name already exists']))->send();
+        }
 
         try {
             // Create a new location in the database
@@ -74,7 +87,7 @@ class FacilityController extends BaseController {
             // Handle exception
             // Log the error message and send a response
             error_log($e->getMessage());
-            return (new Status\InternalServerError(['message' => 'An error occurred while creating the facility']))->send();
+            return (new Status\InternalServerError(['message' => 'An error occurred while creating the facility', 'error' => $e->getMessage()]))->send();
         }
 
         // Send a response
@@ -88,6 +101,11 @@ class FacilityController extends BaseController {
 
         // Fetch the results
         $facilities = $this->db->getStatement()->fetchAll(PDO::FETCH_ASSOC);
+
+        // If there are no facilities, return a message
+        if (empty($facilities)) {
+            return (new Status\Ok(['message' => 'No facilities found']))->send();
+        }
 
         // For each facility, add the location and tags to the result
         foreach ($facilities as $key => $facility) {
@@ -156,62 +174,65 @@ class FacilityController extends BaseController {
         // Get the request data
         $data = json_decode(file_get_contents('php://input'), true);
 
-        // Validate the data (you might want to add more robust validation here)
-        if (!isset($data['name']) || !isset($data['location']) || !isset($data['tags'])) {
-            return (new Status\BadRequest(['message' => 'Invalid input data']))->send();
-        }
+        try {
+            // Update the facility in the database
+            $query = 'UPDATE Facility SET name = :name WHERE id = :id';
+            $this->db->executeQuery($query, [':name' => $data['name'], ':id' => $id]);
 
-        // Update the facility in the database
-        $query = 'UPDATE Facility SET name = :name WHERE id = :id';
-        $this->db->executeQuery($query, [':name' => $data['name'], ':id' => $id]);
+            // Update the location in the database
+            $location_data = $data['location'];
+            $query = 'UPDATE Location
+                  SET city = :city, address = :address, zip_code = :zip_code,
+                      country_code = :country_code, phone_number = :phone_number
+                  WHERE id = :location_id';
+            $this->db->executeQuery($query, [
+                ':city' => $location_data['city'],
+                ':address' => $location_data['address'],
+                ':zip_code' => $location_data['zip_code'],
+                ':country_code' => $location_data['country_code'],
+                ':phone_number' => $location_data['phone_number'],
+                ':location_id' => $facility['location_id']
+            ]);
 
-        // Update the location in the database
-        $location_data = $data['location'];
-        $query = 'UPDATE Location
-              SET city = :city, address = :address, zip_code = :zip_code,
-                  country_code = :country_code, phone_number = :phone_number
-              WHERE id = :location_id';
-        $this->db->executeQuery($query, [
-            ':city' => $location_data['city'],
-            ':address' => $location_data['address'],
-            ':zip_code' => $location_data['zip_code'],
-            ':country_code' => $location_data['country_code'],
-            ':phone_number' => $location_data['phone_number'],
-            ':location_id' => $facility['location_id']
-        ]);
+            // Update the tags in the database
+            // Remove old tags first
+            $query = 'DELETE FROM Facility_Tag WHERE facility_id = :facility_id';
+            $this->db->executeQuery($query, [':facility_id' => $id]);
 
-        // Update the tags in the database
-        // Remove old tags first
-        $query = 'DELETE FROM Facility_Tag WHERE facility_id = :facility_id';
-        $this->db->executeQuery($query, [':facility_id' => $id]);
-
-        // Then add new tags
-        $tags = $data['tags'];
-        foreach ($tags as $tag) {
-            // First, check if the tag already exists
-            $query = 'SELECT id FROM Tag WHERE name = :name';
-            $this->db->executeQuery($query, [':name' => $tag]);
-            $tag_id = $this->db->getStatement()->fetchColumn();
-
-            // If the tag does not exist, create it
-            if (!$tag_id) {
-                $query = 'INSERT INTO Tag (name) VALUES (:name)';
+            // Then add new tags
+            $tags = $data['tags'];
+            foreach ($tags as $tag) {
+                // First, check if the tag already exists
+                $query = 'SELECT id FROM Tag WHERE name = :name';
                 $this->db->executeQuery($query, [':name' => $tag]);
-                $tag_id = $this->db->getLastInsertedId();
+                $tag_id = $this->db->getStatement()->fetchColumn();
+
+                // If the tag does not exist, create it
+                if (!$tag_id) {
+                    $query = 'INSERT INTO Tag (name) VALUES (:name)';
+                    $this->db->executeQuery($query, [':name' => $tag]);
+                    $tag_id = $this->db->getLastInsertedId();
+                }
+
+                // Then, link the tag to the facility
+                $query = 'INSERT INTO Facility_Tag (facility_id, tag_id) VALUES (:facility_id, :tag_id)';
+                $this->db->executeQuery($query, [':facility_id' => $id, ':tag_id' => $tag_id]);
             }
 
-            // Then, link the tag to the facility
-            $query = 'INSERT INTO Facility_Tag (facility_id, tag_id) VALUES (:facility_id, :tag_id)';
-            $this->db->executeQuery($query, [':facility_id' => $id, ':tag_id' => $tag_id]);
-        }
+            // Send a response
+            return (new Status\Ok(['message' => 'Facility updated successfully']))->send();
 
-        // Send a response
-        return (new Status\Ok(['message' => 'Facility updated successfully']))->send();
+        } catch (PDOException $e) {
+            // Handle exception
+            // Log the error message and send a response
+            error_log($e->getMessage());
+            return (new Status\InternalServerError(['message' => 'An error occurred while updating the facility', 'error' => $e->getMessage()]))->send();
+        }
     }
 
     public function delete($id) {
         // Check if the facility with the given ID exists in the database
-        $query = 'SELECT id FROM Facility WHERE id = :id';
+        $query = 'SELECT id, location_id FROM Facility WHERE id = :id';
         $this->db->executeQuery($query, [':id' => $id]);
         $facility = $this->db->getStatement()->fetch(PDO::FETCH_ASSOC);
 
@@ -233,6 +254,10 @@ class FacilityController extends BaseController {
         $query = 'DELETE FROM Facility WHERE id = :id';
         $this->db->executeQuery($query, [':id' => $id]);
 
+        // Delete the location associated with the facility
+        $query = 'DELETE FROM Location WHERE id = :location_id';
+        $this->db->executeQuery($query, [':location_id' => $facility['location_id']]);
+
         // Check each tag to see if it's being used by any other facilities
         foreach ($tags as $tag_id) {
             $query = 'SELECT COUNT(*) FROM Facility_Tag WHERE tag_id = :tag_id';
@@ -253,9 +278,10 @@ class FacilityController extends BaseController {
     public function search() {
         // Get the search query, page, and size from the request data
         $data = json_decode(file_get_contents('php://input'), true);
-        if (!isset($data['query'])) {
-            return (new Status\BadRequest(['message' => 'No search query provided']))->send();
+        if (!isset($data['query']) || !is_string($data['query'])) {
+            return (new Status\BadRequest(['message' => 'Invalid search query']))->send();
         }
+
         $query = $data['query'];
         $page = isset($data['page']) ? max(1, $data['page']) : 1;  // default to 1 if not set
         $size = isset($data['size']) ? max(1, $data['size']) : 10;  // default to 10 if not set

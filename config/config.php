@@ -3,8 +3,8 @@
 return [
     'db' => [
         'host' => 'localhost',
-        'database' => 'catering',
-        'username' => 'mamp',
-        'password' => '',
+        'database' => 'db_name_here',
+        'username' => 'username_here',
+        'password' => 'password_here',
     ],
 ];
