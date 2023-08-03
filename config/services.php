@@ -1,5 +1,6 @@
 <?php
 
+global $config;
 require_once '../vendor/autoload.php';
 
 use App\Plugins;

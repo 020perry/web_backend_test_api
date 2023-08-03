@@ -67,11 +67,15 @@ abstract class Base {
      * @throws Exception
      */
     public function get($name) {
-        if (!isset($this->services['$name'])) {
+        if (!isset($this->sharedServices[$name]) && !isset($this->services[$name])) {
             throw new Exception('Service not registered in the DI', 1);
         }
-        $serviceFunction = $this->services[$name];
-        return $serviceFunction();
+        if (isset($this->sharedServices[$name])) {
+            return $this->sharedServices[$name];
+        } else {
+            $serviceFunction = $this->services[$name];
+            return $serviceFunction();
+        }
     }
 
     /**
